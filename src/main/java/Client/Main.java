@@ -12,11 +12,12 @@ import java.util.stream.Stream;
  * Загаданное слово содержит более 5 букв
  * Изначально все буквы слова неизвестны для игрока
  * Игрок вводит буквы по-одной, регистр не важен
- * У игрока 6 попыток на ввод буквы (голова, туловище, 2 руки и 2 ноги)*/
+ * У игрока 6 попыток на ввод буквы (голова, туловище, 2 руки и 2 ноги)
+ */
 public class Main {
     private static final int MIN_LENGTH = 3;
     private static final int MAX_TRIES = 6;
-    private static final Path dictionaryPath = Path.of("src", "main","resources","singular.txt");
+    private static final Path dictionaryPath = Path.of("src", "main", "resources", "singular.txt");
 
     private static final Random random = new Random();
     private static final Scanner scanner = new Scanner(System.in);
@@ -29,7 +30,7 @@ public class Main {
         startGame();
     }
 
-    public static List<String> getDictionary(Path dictionaryPath){
+    public static List<String> getDictionary(Path dictionaryPath) {
         List<String> dictionary = new ArrayList<>();
 
         try (Stream<String> lines = Files.lines(dictionaryPath)) {
@@ -43,7 +44,7 @@ public class Main {
         return dictionary;
     }
 
-    public static String getRandomWord(List<String> dictionary){
+    public static String getRandomWord(List<String> dictionary) {
         int index = random.nextInt(dictionary.size());
         return dictionary.get(index);
     }
@@ -61,7 +62,7 @@ public class Main {
         return result.toString();
     }
 
-    public static char inputChar(Set<Character> correctCharsSet, Set<Character> incorrectCharsSet){
+    public static char inputChar(Set<Character> correctCharsSet, Set<Character> incorrectCharsSet) {
         System.out.println("Введите букву для проверки: ");
 
         do {
@@ -85,8 +86,8 @@ public class Main {
             }
 
             if (correctCharsSet.contains(character)
-                || incorrectCharsSet.contains(character)){
-                System.out.println("Вы уже проверяли букву " + input +".Введите русскую букву: ");
+                    || incorrectCharsSet.contains(character)) {
+                System.out.println("Вы уже проверяли букву " + input + ".Введите русскую букву: ");
                 continue;
             }
 
@@ -94,31 +95,31 @@ public class Main {
         } while (true);
     }
 
-    public static void startGame(){
+    public static void startGame() {
         List<String> dictionary = getDictionary(dictionaryPath);
-        while(true){
+        while (true) {
             System.out.println("Хотите начать игру? 1 - да 0 - нет");
             String input = scanner.nextLine();
 
-           if (Objects.equals(input, "1")){
+            if (Objects.equals(input, "1")) {
                 String searchWord = getRandomWord(dictionary);
                 startGameLoop(searchWord);
-            } else if (Objects.equals(input, "0")){
-               break;
-           }
+            } else if (Objects.equals(input, "0")) {
+                break;
+            }
         }
     }
 
-    public static void startGameLoop(String searchWord){
+    public static void startGameLoop(String searchWord) {
         Set<Character> correctCharSet = new HashSet<>();
         Set<Character> incorrectCharSet = new HashSet<>();
 
-        do{
+        do {
             char charTry = inputChar(correctCharSet, incorrectCharSet);
 
-            if (searchWord.contains(String.valueOf(charTry))){
+            if (searchWord.contains(String.valueOf(charTry))) {
                 correctCharSet.add(charTry);
-            }else{
+            } else {
                 incorrectCharSet.add(charTry);
             }
 
@@ -127,16 +128,16 @@ public class Main {
             String gameState = checkGameState(searchWord, currentWordState, incorrectCharSet.size());
             printHangman(incorrectCharSet.size());
             System.out.println("Ошибки (" + incorrectCharSet.size() + "):" + incorrectCharSet);
-            if (!Objects.equals(gameState, GAME_STATE_GAME_NOT_OVER)){
+            if (!Objects.equals(gameState, GAME_STATE_GAME_NOT_OVER)) {
                 System.out.println(gameState);
                 System.out.println("Загаданное слово: " + searchWord);
                 return;
             }
-        }while(true);
+        } while (true);
     }
 
-    public static String checkGameState(String searchWord, String currentWordState, int incorrectTries){
-        if (Objects.equals(searchWord, currentWordState)){
+    public static String checkGameState(String searchWord, String currentWordState, int incorrectTries) {
+        if (Objects.equals(searchWord, currentWordState)) {
             return GAME_STATE_WON;
         } else if (currentWordState.contains("_")) {
             if (incorrectTries >= MAX_TRIES) {
@@ -147,9 +148,9 @@ public class Main {
         return GAME_STATE_GAME_NOT_OVER;
     }
 
-    public static void printHangman(int incorrectTries){
+    public static void printHangman(int incorrectTries) {
         String str = switch (incorrectTries) {
-            case 1 ->  """
+            case 1 -> """
                     _____
                     |  |
                     |  O
