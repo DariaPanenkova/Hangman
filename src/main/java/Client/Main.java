@@ -16,7 +16,7 @@ import java.util.stream.Stream;
  * У игрока 6 попыток на ввод буквы (голова, туловище, 2 руки и 2 ноги)*/
 public class Main {
     private static final int MIN_LENGTH = 3;
-    private static final Path dictionaryPath = Path.of("resources","singular.txt");
+    private static final Path dictionaryPath = Path.of("src", "main","resources","singular.txt");
 
     public static void main(String[] args) {
         //получаем словарь слов не менее 5 букв
@@ -27,6 +27,7 @@ public class Main {
         //если буквы нет - увеличиваем счетчик ошибок (максимум - 6) и рисуем новое состояние виселицы
         List<String> dictionary = getDictionary(dictionaryPath);
 
+        System.out.println((long) dictionary.size());
     }
 
     public static List<String> getDictionary(Path dictionaryPath){
