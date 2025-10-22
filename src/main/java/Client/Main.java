@@ -26,13 +26,6 @@ public class Main {
     private static final String GAME_STATE_GAME_NOT_OVER = "Игра не закончена";
 
     public static void main(String[] args) {
-        //получаем словарь слов не менее 5 букв
-        //выбираем рандомно слово из словаря
-        //запрашиваем букву у пользователя, пока игрок не проиграл(попытки закончились)
-        //или пока есть не отгаданные буквы в слове
-        //если буква есть в слове - устанавливаем ее на правильное(ые) место(а)
-        //если буквы нет - увеличиваем счетчик ошибок (максимум - 6) и рисуем новое состояние виселицы
-
         startGame();
     }
 
@@ -107,13 +100,12 @@ public class Main {
             System.out.println("Хотите начать игру? 1 - да 0 - нет");
             String input = scanner.nextLine();
 
-            if (Objects.equals(input, "1")){
+           if (Objects.equals(input, "1")){
                 String searchWord = getRandomWord(dictionary);
-                System.out.println(searchWord);
                 startGameLoop(searchWord);
-            } else {
-                break;
-            }
+            } else if (Objects.equals(input, "0")){
+               break;
+           }
         }
     }
 
@@ -133,6 +125,7 @@ public class Main {
             String currentWordState = getCurrentWordState(searchWord, correctCharSet);
             System.out.println(currentWordState);
             String gameState = checkGameState(searchWord, currentWordState, incorrectCharSet.size());
+            printHangman(incorrectCharSet.size());
             System.out.println("Ошибки (" + incorrectCharSet.size() + "):" + incorrectCharSet);
             if (!Objects.equals(gameState, GAME_STATE_GAME_NOT_OVER)){
                 System.out.println(gameState);
@@ -152,5 +145,60 @@ public class Main {
         }
 
         return GAME_STATE_GAME_NOT_OVER;
+    }
+
+    public static void printHangman(int incorrectTries){
+        String str = switch (incorrectTries) {
+            case 1 ->  """
+                    _____
+                    |  |
+                    |  O
+                    |
+                    |
+                    """;
+            case 2 -> """
+                    _____
+                    |  |
+                    |  O
+                    |  |
+                    |
+                    """;
+            case 3 -> """
+                    _____
+                    |  |
+                    |  O
+                    | /|
+                    |
+                    """;
+            case 4 -> """
+                    _____
+                    |  |
+                    |  O
+                    | /|\\
+                    |
+                    """;
+            case 5 -> """
+                    _____
+                    |  |
+                    |  O
+                    | /|\\
+                    | /
+                    """;
+            case 6 -> """
+                    _____
+                    |  |
+                    |  O
+                    | /|\\
+                    | / \\
+                    """;
+            default -> """
+                    _____
+                    |  |
+                    |
+                    |
+                    |
+                    """;
+        };
+        System.out.println(str);
     }
 }
