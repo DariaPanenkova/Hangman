@@ -2,70 +2,119 @@ package Client;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Бот загадывает слово - существительное в именительном падеже
- * Загаданное слово содержит более 5 букв
- * Изначально все буквы слова неизвестны для игрока
- * Игрок вводит буквы по-одной, регистр не важен
- * У игрока 6 попыток на ввод буквы (голова, туловище, 2 руки и 2 ноги)
- */
 public class Main {
     private static final int MIN_LENGTH = 3;
     private static final int MAX_TRIES = 6;
-    private static final Path dictionaryPath = Path.of("src", "main", "resources", "singular.txt");
+    private static final Path DICTIONARY_PATH  = Path.of("src", "main", "resources", "singular.txt");
 
     private static final Random random = new Random();
     private static final Scanner scanner = new Scanner(System.in);
 
-    private static final String GAME_STATE_WON = "Слово угадано!";
-    private static final String GAME_STATE_OVER = "Вы проиграли!";
-    private static final String GAME_STATE_GAME_NOT_OVER = "Игра не закончена";
+    private final static String START = "1";
+    private final static String QUIT = "0";
+    private final static char UNKNOWN_LETTER = '_';
+    private static final Pattern RUSSIAN_LETTER_PATTERN = Pattern.compile("[а-яё]");
+    private static final String[] PICTURES = {
+                    """
+                    _____
+                    |  |
+                    |
+                    |
+                    |
+                    """,
+                    """
+                    _____
+                    |  |
+                    |  O
+                    |
+                    |
+                    """,
+                    """
+                    _____
+                    |  |
+                    |  O
+                    |  |
+                    |
+                    """,
+                    """
+                    _____
+                    |  |
+                    |  O
+                    | /|
+                    |
+                    """,
+                    """
+                    _____
+                    |  |
+                    |  O
+                    | /|\\
+                    |
+                    """,
+                    """
+                    _____
+                    |  |
+                    |  O
+                    | /|\\
+                    | /
+                    """,
+                    """
+                    _____
+                    |  |
+                    |  O
+                    | /|\\
+                    | / \\
+                    """};
 
     public static void main(String[] args) {
         startGame();
     }
 
-    public static List<String> getDictionary(Path dictionaryPath) {
-        List<String> dictionary = new ArrayList<>();
+    private static List<String> getDictionary(Path dictionaryPath) throws IOException {
+        List<String> dictionary;
 
         try (Stream<String> lines = Files.lines(dictionaryPath)) {
             dictionary = lines.filter(line -> line.length() > MIN_LENGTH)
                     .collect(Collectors.toList());
 
+        }catch (NoSuchFileException e) {
+            throw new IOException("Файл " + dictionaryPath.toAbsolutePath() + " не найден", e);
         } catch (IOException e) {
-            System.err.println("Ошибка при чтении файла: " + e.getMessage());
+            throw new IOException("Ошибка при чтении файла " + dictionaryPath.toAbsolutePath() + "по причине: " + e.getMessage());
         }
 
         return dictionary;
     }
 
-    public static String getRandomWord(List<String> dictionary) {
+    private static String getRandomWord(List<String> dictionary) {
         int index = random.nextInt(dictionary.size());
         return dictionary.get(index);
     }
 
-    public static String getCurrentWordState(String searchWord, Set<Character> rightCharsSet) {
+    private static String getCurrentWordState(String searchWord, Set<Character> rightCharsSet) {
         StringBuilder result = new StringBuilder();
 
         for (char c : searchWord.toCharArray()) {
-            if (rightCharsSet.contains(c)) {
-                result.append(c); // Оставляем символ как есть
-            } else if (Character.isLetter(c)) {
-                result.append('_'); // Заменяем букву на _
+            if (rightCharsSet.contains(c)
+            || !Character.isLetter(c)) {
+                result.append(c);
+            } else {
+                result.append(UNKNOWN_LETTER);
             }
         }
         return result.toString();
     }
 
-    public static char inputChar(Set<Character> correctCharsSet, Set<Character> incorrectCharsSet) {
+    private static char inputLetter(Set<Character> correctCharsSet, Set<Character> incorrectCharsSet) {
         System.out.println("Введите букву для проверки: ");
 
-        do {
+        while (true) {
             String input = scanner.nextLine().toLowerCase();
 
             if (input.isEmpty()) {
@@ -78,128 +127,95 @@ public class Main {
                 continue;
             }
 
-            char character = input.charAt(0);
+            char symbol = input.charAt(0);
 
-            if (!input.matches("[а-яё]")) {
+            if (!RUSSIAN_LETTER_PATTERN.matcher(input).matches()) {
                 System.out.println("Введите русскую букву: ");
                 continue;
             }
 
-            if (correctCharsSet.contains(character)
-                    || incorrectCharsSet.contains(character)) {
-                System.out.println("Вы уже проверяли букву " + input + ".Введите русскую букву: ");
+            if (correctCharsSet.contains(symbol)
+                    || incorrectCharsSet.contains(symbol)) {
+                System.out.printf("Вы уже проверяли букву %s.Введите русскую букву: ", input);
                 continue;
             }
 
-            return character;
-        } while (true);
-    }
-
-    public static void startGame() {
-        List<String> dictionary = getDictionary(dictionaryPath);
-        while (true) {
-            System.out.println("Хотите начать игру? 1 - да 0 - нет");
-            String input = scanner.nextLine();
-
-            if (Objects.equals(input, "1")) {
-                String searchWord = getRandomWord(dictionary);
-                startGameLoop(searchWord);
-            } else if (Objects.equals(input, "0")) {
-                break;
-            }
+            return symbol;
         }
     }
 
-    public static void startGameLoop(String searchWord) {
-        Set<Character> correctCharSet = new HashSet<>();
-        Set<Character> incorrectCharSet = new HashSet<>();
+    private static void startGame() {
+        try {
+            List<String> dictionary = getDictionary(DICTIONARY_PATH);
 
-        do {
-            char charTry = inputChar(correctCharSet, incorrectCharSet);
-
-            if (searchWord.contains(String.valueOf(charTry))) {
-                correctCharSet.add(charTry);
-            } else {
-                incorrectCharSet.add(charTry);
+            if (dictionary.isEmpty()) {
+                throw new IOException("Словарь пуст");
             }
 
-            String currentWordState = getCurrentWordState(searchWord, correctCharSet);
+            while (true) {
+                System.out.printf("Хотите начать игру? %s - да %s - нет \n", START, QUIT);
+                String input = scanner.nextLine();
+
+                if (Objects.equals(input, START))  {
+                    String searchWord = getRandomWord(dictionary);
+                    startGameLoop(searchWord);
+                }
+
+                if (Objects.equals(input, QUIT)) {
+                    break;
+                }
+            }
+        }catch (IOException e) {
+            System.out.println("Ошибка при запуске:");
+            System.err.println(e.getMessage());
+            System.err.println("Программа будет завершена.");
+            System.exit(1);
+        }
+    }
+
+    private static void startGameLoop(String searchWord) {
+        Set<Character> wordLetters = new LinkedHashSet<>();
+        Set<Character> incorrectLetters = new LinkedHashSet<>();
+
+        while (!isLose(incorrectLetters.size())){
+            char letter = inputLetter(wordLetters, incorrectLetters);
+
+            if (isWordContainLetter(searchWord, letter)) {
+                wordLetters.add(letter);
+            } else {
+                incorrectLetters.add(letter);
+            }
+
+            String currentWordState = getCurrentWordState(searchWord, wordLetters);
             System.out.println(currentWordState);
-            String gameState = checkGameState(searchWord, currentWordState, incorrectCharSet.size());
-            printHangman(incorrectCharSet.size());
-            System.out.println("Ошибки (" + incorrectCharSet.size() + "):" + incorrectCharSet);
-            if (!Objects.equals(gameState, GAME_STATE_GAME_NOT_OVER)) {
-                System.out.println(gameState);
-                System.out.println("Загаданное слово: " + searchWord);
+            printHangman(incorrectLetters.size());
+            System.out.printf("Ошибки (%d): %s \n", incorrectLetters.size(), incorrectLetters);
+
+            if (isWin(searchWord, currentWordState)) {
+                System.out.println("Слово угадано!");
                 return;
             }
-        } while (true);
-    }
-
-    public static String checkGameState(String searchWord, String currentWordState, int incorrectTries) {
-        if (Objects.equals(searchWord, currentWordState)) {
-            return GAME_STATE_WON;
-        } else if (currentWordState.contains("_")) {
-            if (incorrectTries >= MAX_TRIES) {
-                return GAME_STATE_OVER;
-            }
         }
-
-        return GAME_STATE_GAME_NOT_OVER;
+        System.out.println("Попытки закончились, вы проиграли!");
+        System.out.printf("Загаданное слово: %s \n", searchWord);
     }
 
-    public static void printHangman(int incorrectTries) {
-        String str = switch (incorrectTries) {
-            case 1 -> """
-                    _____
-                    |  |
-                    |  O
-                    |
-                    |
-                    """;
-            case 2 -> """
-                    _____
-                    |  |
-                    |  O
-                    |  |
-                    |
-                    """;
-            case 3 -> """
-                    _____
-                    |  |
-                    |  O
-                    | /|
-                    |
-                    """;
-            case 4 -> """
-                    _____
-                    |  |
-                    |  O
-                    | /|\\
-                    |
-                    """;
-            case 5 -> """
-                    _____
-                    |  |
-                    |  O
-                    | /|\\
-                    | /
-                    """;
-            case 6 -> """
-                    _____
-                    |  |
-                    |  O
-                    | /|\\
-                    | / \\
-                    """;
-            default -> """
-                    _____
-                    |  |
-                    |
-                    |
-                    |
-                    """;
-        };
-        System.out.println(str);
+    private static boolean isLose(int incorrectTries) {
+        return incorrectTries >= MAX_TRIES;
+    }
+
+    private static boolean isWin(String searchWord, String currentWordState){
+        return Objects.equals(searchWord, currentWordState);
+    }
+
+    private static boolean isWordContainLetter(String searchWord, char letter){
+        return searchWord.contains(String.valueOf(letter));
+    }
+
+    private static void printHangman(int numPicture) {
+        if (numPicture > MAX_TRIES){
+            throw new IllegalArgumentException(String.format("Картинки виселицы для количества ошибок = %d не существует", numPicture));
+        }
+        System.out.println(PICTURES[numPicture]);
     }
 }
