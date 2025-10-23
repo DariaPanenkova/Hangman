@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 public class Main {
     private static final int MIN_LENGTH = 3;
     private static final int MAX_TRIES = 6;
-    private static final Path DICTIONARY_PATH  = Path.of("src", "main", "resources", "singular.txt");
+    private static final Path DICTIONARY_PATH = Path.of("src", "main", "resources", "singular.txt");
 
     private static final Random random = new Random();
     private static final Scanner scanner = new Scanner(System.in);
@@ -22,49 +22,49 @@ public class Main {
     private final static char UNKNOWN_LETTER = '_';
     private static final Pattern RUSSIAN_LETTER_PATTERN = Pattern.compile("[а-яё]");
     private static final String[] PICTURES = {
-                    """
+            """
                     _____
                     |  |
                     |
                     |
                     |
                     """,
-                    """
-                    _____
-                    |  |
-                    |  O
-                    |
-                    |
-                    """,
-                    """
+            """
                     _____
                     |  |
                     |  O
+                    |
+                    |
+                    """,
+            """
+                    _____
+                    |  |
+                    |  O
                     |  |
                     |
                     """,
-                    """
+            """
                     _____
                     |  |
                     |  O
                     | /|
                     |
                     """,
-                    """
+            """
                     _____
                     |  |
                     |  O
                     | /|\\
                     |
                     """,
-                    """
+            """
                     _____
                     |  |
                     |  O
                     | /|\\
                     | /
                     """,
-                    """
+            """
                     _____
                     |  |
                     |  O
@@ -83,7 +83,7 @@ public class Main {
             dictionary = lines.filter(line -> line.length() > MIN_LENGTH)
                     .collect(Collectors.toList());
 
-        }catch (NoSuchFileException e) {
+        } catch (NoSuchFileException e) {
             throw new IOException("Файл " + dictionaryPath.toAbsolutePath() + " не найден", e);
         } catch (IOException e) {
             throw new IOException("Ошибка при чтении файла " + dictionaryPath.toAbsolutePath() + "по причине: " + e.getMessage());
@@ -102,7 +102,7 @@ public class Main {
 
         for (char c : searchWord.toCharArray()) {
             if (rightCharsSet.contains(c)
-            || !Character.isLetter(c)) {
+                    || !Character.isLetter(c)) {
                 result.append(c);
             } else {
                 result.append(UNKNOWN_LETTER);
@@ -156,7 +156,7 @@ public class Main {
                 System.out.printf("Хотите начать игру? %s - да %s - нет \n", START, QUIT);
                 String input = scanner.nextLine();
 
-                if (Objects.equals(input, START))  {
+                if (Objects.equals(input, START)) {
                     String searchWord = getRandomWord(dictionary);
                     startGameLoop(searchWord);
                 }
@@ -165,7 +165,7 @@ public class Main {
                     break;
                 }
             }
-        }catch (IOException e) {
+        } catch (IOException e) {
             System.out.println("Ошибка при запуске:");
             System.err.println(e.getMessage());
             System.err.println("Программа будет завершена.");
@@ -177,7 +177,7 @@ public class Main {
         Set<Character> wordLetters = new LinkedHashSet<>();
         Set<Character> incorrectLetters = new LinkedHashSet<>();
 
-        while (!isLose(incorrectLetters.size())){
+        while (!isLose(incorrectLetters.size())) {
             char letter = inputLetter(wordLetters, incorrectLetters);
 
             if (isWordContainLetter(searchWord, letter)) {
@@ -204,16 +204,16 @@ public class Main {
         return incorrectTries >= MAX_TRIES;
     }
 
-    private static boolean isWin(String searchWord, String currentWordState){
+    private static boolean isWin(String searchWord, String currentWordState) {
         return Objects.equals(searchWord, currentWordState);
     }
 
-    private static boolean isWordContainLetter(String searchWord, char letter){
+    private static boolean isWordContainLetter(String searchWord, char letter) {
         return searchWord.contains(String.valueOf(letter));
     }
 
     private static void printHangman(int numPicture) {
-        if (numPicture > MAX_TRIES){
+        if (numPicture > MAX_TRIES) {
             throw new IllegalArgumentException(String.format("Картинки виселицы для количества ошибок = %d не существует", numPicture));
         }
         System.out.println(PICTURES[numPicture]);
